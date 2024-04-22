@@ -1,26 +1,31 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/batatinha123/products-api/internal/products"
+	"github.com/batatinha123/bootcamp-meli-web/internal/products"
 	"github.com/gin-gonic/gin"
 )
 
 type CreateRequestDto struct {
-	Name     string  `json:"name"`
-	Category string  `json:"category"`
-	Count    int     `json:"count"`
-	Price    float64 `json:"price"`
+	Name      string  `json:"name"`
+	Color     string  `json:"color"`
+	Price     float64 `json:"price"`
+	Count     int     `json:"count"`
+	Code      string  `json:"code"`
+	Published bool    `json:"published"`
 }
 
 type UpdateRequestDto struct {
-	Name     string  `json:"name" `
-	Category string  `json:"category" binding:"required"`
-	Count    int     `json:"count"`
-	Price    float64 `json:"price"`
+	Name      string  `json:"name"`
+	Color     string  `json:"color"`
+	Price     float64 `json:"price"`
+	Count     int     `json:"count"`
+	Code      string  `json:"code"`
+	Published bool    `json:"published"`
 }
 
 type UpdateNameRequestDto struct {
@@ -37,18 +42,18 @@ func NewProduct(p products.Service) *ProductHandler {
 	}
 }
 
-// ListProducts godoc
-// @Summary List products
-// @Tags Products
-// @Description get products
-// @Accept  json
-// @Produce  json
-// @Param token header string true "token"
-// @Success 200 {object} web.Response
-// @Router /products [get]
 func (c *ProductHandler) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		p, err := c.service.GetAll()
+		var queryParams products.Filter
+		err := ctx.ShouldBindQuery(&queryParams)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		p, err := c.service.GetAll(queryParams)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
@@ -65,16 +70,6 @@ func (c *ProductHandler) GetAll() gin.HandlerFunc {
 	}
 }
 
-// StoreProducts godoc
-// @Summary Store products
-// @Tags Products
-// @Description store products
-// @Accept  json
-// @Produce  json
-// @Param token header string true "token"
-// @Param product body CreateRequestDto true "Product to store"
-// @Success 200 {object} web.Response
-// @Router /products [post]
 func (c *ProductHandler) Store() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req CreateRequestDto
@@ -86,11 +81,13 @@ func (c *ProductHandler) Store() gin.HandlerFunc {
 		}
 
 		// quando chamamos a service, os dados já estarão tratados
-		fmt.Println(req.Name, req.Category, req.Count, req.Price)
-		p, err := c.service.Store(req.Name, req.Category, req.Count, req.Price)
+		p, err := c.service.Store(req.Name, req.Code, req.Color, req.Count, req.Price, req.Published)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+			switch {
+			case errors.Is(err, products.ErrProductAlreadyExists):
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
 		}
 		ctx.JSON(http.StatusCreated, p)
 	}
@@ -114,15 +111,13 @@ func (c *ProductHandler) Update() gin.HandlerFunc {
 			return
 		}
 
-		fmt.Println(req.Name, req.Category, req.Count, req.Price)
-
 		if req.Name == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "o nome do produto é obrigatório"})
 			return
 		}
 
-		if req.Category == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "a categoria do produto é obrigatório"})
+		if req.Code == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "o código do produto é obrigatório"})
 			return
 		}
 
@@ -136,7 +131,7 @@ func (c *ProductHandler) Update() gin.HandlerFunc {
 			return
 		}
 
-		p, err := c.service.Update(id, req.Name, req.Category, req.Count, req.Price)
+		p, err := c.service.Update(id, req.Name, req.Code, req.Color, req.Count, req.Price, req.Published)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return

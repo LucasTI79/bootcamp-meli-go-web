@@ -1,5 +1,12 @@
 package products
 
+import "errors"
+
+var (
+	ErrProductAlreadyExists = errors.New("product already exists")
+	ErrProductNotFound      = errors.New("product not found")
+)
+
 type Service interface {
 	GetAll() ([]Product, error)
 	Store(name, category string, count int, price float64) (Product, error)
