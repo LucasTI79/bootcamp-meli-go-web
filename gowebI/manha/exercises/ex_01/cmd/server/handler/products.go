@@ -44,26 +44,16 @@ func NewProduct(p products.Service) *ProductHandler {
 
 func (c *ProductHandler) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		queryName, queryParamNameExists := ctx.GetQuery("name")
-		queryPublished, queryParamPublishedExists := ctx.GetQuery("published")
-
-		var filter products.Filter
-
-		if queryParamNameExists {
-			filter.Name = queryName
+		var queryParams products.Filter
+		err := ctx.ShouldBindQuery(&queryParams)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
 
-		if queryParamPublishedExists {
-			if queryPublished == "true" {
-				var published bool = true
-				filter.Published = &published
-			} else {
-				var published bool = false
-				filter.Published = &published
-			}
-		}
-
-		p, err := c.service.GetAll(filter)
+		p, err := c.service.GetAll(queryParams)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),

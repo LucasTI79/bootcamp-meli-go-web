@@ -3,8 +3,8 @@ package products
 import "github.com/batatinha123/bootcamp-meli-web/pkg/store"
 
 type Filter struct {
-	Name      string
-	Published *bool
+	Name      string `form:"name" json:"name" binding:"omitempty"`
+	Published *bool  `form:"published" json:"published"`
 }
 
 type Repository interface {
