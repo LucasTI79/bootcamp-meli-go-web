@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "name": "Produto 1",
+    "color": "#ff7900",
+    "price": 20,
+    "count": 10,
+    "code": "produto_1",
+    "published": true,
+    "created_at": "2024-04-22 15:36:28.03530979 -0300 -03 m=+130.420688745"
+  }
+]

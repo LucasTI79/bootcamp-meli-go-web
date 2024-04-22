@@ -8,7 +8,7 @@ var (
 )
 
 type Service interface {
-	GetAll() ([]Product, error)
+	GetAll(filter Filter) ([]Product, error)
 	Store(name, code, color string, count int, price float64, published bool) (Product, error)
 	Update(id uint64, name, code, color string, count int, price float64, published bool) (Product, error)
 	UpdateName(id uint64, name string) (Product, error)
@@ -19,8 +19,8 @@ type service struct {
 	repository Repository
 }
 
-func (s *service) GetAll() ([]Product, error) {
-	produtos, err := s.repository.GetAll()
+func (s *service) GetAll(filter Filter) ([]Product, error) {
+	produtos, err := s.repository.GetAll(filter)
 	if err != nil {
 		return nil, err
 	}

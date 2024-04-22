@@ -16,10 +16,35 @@ func NewFileRepository(db store.Store) Repository {
 	}
 }
 
-func (r *FileRepository) GetAll() ([]Product, error) {
+func (r *FileRepository) GetAll(filter Filter) ([]Product, error) {
 	var ps []Product
 	r.db.Read(&ps)
-	return ps, nil
+
+	var filtered []Product
+
+	for _, p := range ps {
+		var shouldBeFiltered bool = false
+
+		if filter.Name != "" {
+			if p.Name == filter.Name {
+				shouldBeFiltered = true
+			}
+		}
+
+		if filter.Published != nil {
+			if p.Published == *filter.Published {
+				shouldBeFiltered = true
+			} else {
+				shouldBeFiltered = false
+			}
+		}
+
+		if shouldBeFiltered {
+			filtered = append(filtered, p)
+		}
+	}
+
+	return filtered, nil
 }
 
 func (r *FileRepository) Store(name, code, color string, count int, price float64, published bool) (Product, error) {

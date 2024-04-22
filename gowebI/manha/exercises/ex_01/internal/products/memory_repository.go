@@ -44,6 +44,7 @@ func (m *MemoryRepository) Update(id uint64, name, code, color string, count int
 	for i := range ps {
 		if ps[i].ID == id {
 			p.ID = id
+			p.CreatedAt = ps[i].CreatedAt
 			ps[i] = p
 			updated = true
 		}
